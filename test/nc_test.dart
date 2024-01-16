@@ -32,11 +32,53 @@ void main() {
       gctx.free();
     });
 
+    test('invoke with NativeCallable wrapper', () {
+      final gctx = JSGlobalContext.create();
+      final consoleLogJSV = JSObject.makeFunctionWithCallback(
+        gctx,
+        name: 'console.log',
+        callAsFunction:
+            (ctx, function, thisObject, argumentCount, arguments, exception) {
+          // do something.....
+          return JSValue.makeUndefined(ctx);
+        },
+      );
+      final ret = consoleLogJSV.callAsFunction(arguments: [
+        JSValue.makeString(gctx, 'test...'),
+        JSValue.makeBoolean(gctx, false),
+        JSValue.makeNumber(gctx, 100),
+        JSValue.makeNull(gctx),
+        JSValue.makeUndefined(gctx)
+      ]);
+      expect(ret.string, '1');
+      consoleLogJSV.free();
+      gctx.free();
+    });
     test('invoke with ffi', () {
       final gctx = JSGlobalContext.create();
       final Pointer<NativeFunction<JSObjectCallAsFunctionCallback_>> cb =
           Pointer.fromFunction(_console_log_raw);
 
+      final consoleLogJSV = JSObject.makeFunctionWithCallbackRaw(gctx,
+          name: 'console.log', callAsFunction: cb);
+      final ret = consoleLogJSV.callAsFunction(arguments: [
+        JSValue.makeString(gctx, 'test...'),
+        JSValue.makeBoolean(gctx, false),
+        JSValue.makeNumber(gctx, 100),
+        JSValue.makeNull(gctx),
+        JSValue.makeUndefined(gctx)
+      ]);
+      expect(ret.string, '1');
+      consoleLogJSV.free();
+      gctx.free();
+    });
+
+    test('invoke with NativeCallable global variable', () {
+      final gctx = JSGlobalContext.create();
+      final NativeCallable<JSObjectCallAsFunctionCallback_> nativeCallable =
+          NativeCallable<JSObjectCallAsFunctionCallback_>.isolateLocal(
+              _console_log_raw);
+      final cb = nativeCallable.nativeFunction;
       final consoleLogJSV = JSObject.makeFunctionWithCallbackRaw(gctx,
           name: 'console.log', callAsFunction: cb);
       final ret = consoleLogJSV.callAsFunction(arguments: [
