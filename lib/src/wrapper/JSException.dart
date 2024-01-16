@@ -11,6 +11,7 @@ class JSException {
   final JSContext _context;
   final Pointer<JSValueRef> _ref;
   Pointer<JSValueRef> get ref => _ref;
+
   factory JSException.create(JSContext context, [JSValue? error]) {
     final Pointer<JSValueRef> ref = calloc.call(1);
     ref.value = error?.ref ?? nullptr;
@@ -25,7 +26,10 @@ class JSException {
 
   void free() {
     if (_ref != nullptr) {
-      calloc.free(_ref);
+      if (_ref.value != nullptr) {
+        calloc.free(_ref.value);
+        calloc.free(_ref); // 否则会报错 pointer being freed was not allocated
+      }
     }
   }
 

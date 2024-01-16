@@ -20,7 +20,7 @@ class JSContext {
 }
 
 class JSGlobalContext extends JSContext {
-  JSGlobalContext(JSGlobalContextRef ref) : super(ref);
+  JSGlobalContext(super.ref);
   factory JSGlobalContext.create() {
     return JSGlobalContext(JSGlobalContextCreate(nullptr));
   }

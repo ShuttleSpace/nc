@@ -22,29 +22,35 @@ class JSObject {
         int argc,
         Pointer<JSValueRef> argv,
         Pointer<JSValueRef> exception) {
-      final ctxw = JSContext(ctx1);
-      final jsfunc = JSObject(ctxw, function);
-      final jsthiz = JSObject(ctxw, thiz);
-      final argvlist = <JSValue>[];
-
-      for (int i = 0; i < argc; i++) {
-        argvlist[i] = JSValue(ctxw, argv[i]);
-      }
-      final jsexc = JSException(ctxw, exception);
       try {
-        print(
-            '[JSObject.makeFunctionWithCallback] NativeCallable.isolateLocal.');
-        return callAsFunction
-                ?.call(ctxw, jsfunc, jsthiz, argc, argvlist, jsexc)
-                .ref ??
-            nullptr;
-      } finally {
-        jsfunc.value.unprotect();
-        jsthiz.value.unprotect();
-        for (var e in argvlist) {
-          e.unprotect();
+        final ctxw = JSContext(ctx1);
+        final jsfunc = JSObject(ctxw, function);
+        final jsthiz = JSObject(ctxw, thiz);
+        final argvlist = <JSValue>[];
+
+        for (int i = 0; i < argc; i++) {
+          argvlist.add(JSValue(ctxw, argv[i]));
         }
-        jsexc.free();
+        print(
+            '[makeFunctionWithCallback] exception == nullptr: ${exception == nullptr} ${exception.value == nullptr}');
+        final jsexc = JSException(ctxw, exception);
+        try {
+          print(
+              '[JSObject.makeFunctionWithCallback] NativeCallable.isolateLocal.');
+          return callAsFunction
+                  ?.call(ctxw, jsfunc, jsthiz, argc, argvlist, jsexc)
+                  .ref ??
+              nullptr;
+        } finally {
+          jsfunc.value.unprotect();
+          jsthiz.value.unprotect();
+          for (var e in argvlist) {
+            e.unprotect();
+          }
+          jsexc.free();
+        }
+      } catch (e, st) {
+        print('[Caught exception]: $e\n$st');
       }
     });
     final JSString? jsname = name != null ? JSString.fromString(name) : null;
